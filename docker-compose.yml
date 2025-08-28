@@ -1,0 +1,117 @@
+services:
+  cr-ui:
+    build:
+      dockerfile: cr-ui.dockerfile
+      context: cr-ui/
+    container_name: cr-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - cr-api
+    networks:
+      - crawler-net
+
+  cr-api:
+    build:
+      dockerfile: cr-api.dockerfile
+      context: cr-api/
+    container_name: cr-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - cr-db
+      - cr-ai
+    environment:
+      - DATABASE_URL=postgresql://crawler:secret@cr-db:5432/crawlerdb
+      - AI_API_URL=http://cr-ai:8500
+    networks:
+      - crawler-net
+
+  cr-scraper:
+    build:
+      dockerfile: cr-scraper.dockerfile
+      context: cr-scraper/
+    container_name: cr-scraper
+    depends_on:
+      - cr-api
+    networks:
+      - crawler-net
+
+  cr-scheduler:
+    build:
+      dockerfile: cr-scheduler.dockerfile
+      context: cr-scheduler/
+    container_name: cr-scheduler
+    depends_on:
+      - cr-scraper
+      - cr-preproc
+      - cr-ai
+      - cr-db
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - crawler-net
+
+  cr-preproc:
+    build:
+      dockerfile: cr-preproc.dockerfile
+      context: cr-preproc/
+    container_name: cr-preproc
+    networks:
+      - crawler-net
+
+  cr-ai:
+    build:
+      dockerfile: cr-ai.dockerfile
+      context: cr-ai/
+    container_name: cr-ai
+    ports:
+      - "8500:8500"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - crawler-net
+
+  cr-db:
+    build:
+      dockerfile: cr-db.dockerfile
+      context: cr-db/
+    container_name: cr-db
+    environment:
+      - POSTGRES_USER=crawler
+      - POSTGRES_PASSWORD=secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - crawler-db-data:/var/lib/postgresql/data
+    networks:
+      - crawler-net
+
+  cr-viz:
+    build:
+      dockerfile: cr-viz.dockerfile
+      context: cr-viz/
+    container_name: cr-viz
+    ports:
+      - "8600:8600"
+    depends_on:
+      - cr-db
+    networks:
+      - crawler-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - crawler-net
+
+volumes:
+  crawler-db-data:
+
+networks:
+  crawler-net:
+    driver: bridge

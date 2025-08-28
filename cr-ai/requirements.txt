@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+openai
+scikit-learn
+transformers
+spacy
