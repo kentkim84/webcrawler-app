@@ -1,49 +1,17 @@
-version: "3.9"
-
+version: "3.8"
 services:
   ui:
     build: ./ui
     ports:
       - "3000:3000"
-    depends_on:
-      - api
     environment:
-      - VITE_API_URL=http://localhost:8000
-
-  api:
-    build: ./api
-    ports:
-      - "8000:8000"
+      - REACT_APP_API_URL=http://scraper:8000
     depends_on:
-      - storage
-      - scheduler
-    environment:
-      - DATABASE_URL=postgresql://user:password@storage:5432/webscraper
+      - scraper
 
   scraper:
     build: ./scraper
-    depends_on:
-      - scheduler
-      - storage
-
-  ai:
-    build: ./ai
-    depends_on:
-      - scheduler
-      - storage
-
-  scheduler:
-    build: ./scheduler
-    depends_on:
-      - storage
-
-  storage:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: webscraper
     ports:
-      - "5432:5432"
-    volumes:
-      - ./storage/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1

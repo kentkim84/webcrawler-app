@@ -1,5 +1,6 @@
+fastapi
+uvicorn[standard]
 scrapy
 beautifulsoup4
-lxml
-requests
 pandas
+requests
