@@ -1,17 +1,37 @@
-version: "3.8"
-services:
-  ui:
-    build: ./ui
-    ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=http://scraper:8000
-    depends_on:
-      - scraper
+version: '3.8'
 
-  scraper:
-    build: ./scraper
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: scraper_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    restart: always
     ports:
       - "8000:8000"
     environment:
-      - PYTHONUNBUFFERED=1
+      DATABASE_URL: postgresql://user:password@db:5432/scraper_db
+    depends_on:
+      - db
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    command: npm start
+
+volumes:
+  postgres_data:

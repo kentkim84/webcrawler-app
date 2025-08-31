@@ -1,6 +1,0 @@
-fastapi
-uvicorn[standard]
-scrapy
-beautifulsoup4
-pandas
-requests
