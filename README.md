@@ -1,7 +1,7 @@
 # Webcrawler App
 
 ## Overview
-The **Webcrawler App** is a full-stack application designed to crawl websites, extract data, and provide a user interface for managing and viewing crawl results. The backend is built with Python using FastAPI for the API and Scrapy for web crawling, while the frontend is a React-based single-page application. The project is containerized using Docker and orchestrated with Docker Compose for easy deployment.
+The **Webcrawler App** is a full-stack application designed to crawl websites, extract data (e.g., titles and content), and provide a user-friendly interface for managing and viewing crawl results. The backend is powered by Python, utilizing **FastAPI** for the API and **Scrapy** for web crawling. The frontend is a **React**-based single-page application. The project is containerized with **Docker** and orchestrated using **Docker Compose** for seamless deployment and development.
 
 ## Project Structure
 ```
@@ -18,8 +18,6 @@ webcrawler-app/
 │       ├── scrapy.cfg         # Scrapy configuration
 │       └── scraper/
 │           ├── items.py       # Scrapy item definitions
-│           ├── middlewares.py # Custom Scrapy middlewares (currently empty)
-│           ├── pipelines.py   # Item processing and storage logic
 │           ├── settings.py    # Scrapy settings
 │           └── spiders/
 │               └── basic_spider.py # Core crawling logic
@@ -35,16 +33,17 @@ webcrawler-app/
 ```
 
 ## Features
-- **Web Crawling**: Uses Scrapy to recursively crawl websites and extract data (e.g., URLs, titles, content).
-- **API**: FastAPI backend provides endpoints to start crawls, retrieve results, and manage tasks.
-- **Database Integration**: Stores crawled data using SQLAlchemy, with Pydantic for validation.
-- **Frontend UI**: React-based interface for submitting crawl requests and viewing results.
-- **Containerization**: Dockerized backend and frontend services, orchestrated with Docker Compose.
+- **Web Crawling**: Uses Scrapy to crawl websites and extract data such as page titles and paragraph content.
+- **API**: FastAPI backend provides endpoints for user authentication, initiating crawls, and retrieving results.
+- **Authentication**: Supports user registration and login with JWT-based authentication.
+- **Database Integration**: Stores crawled data in a PostgreSQL database using SQLAlchemy, with Pydantic for input/output validation.
+- **Frontend UI**: React-based interface for user authentication, submitting crawl requests, and viewing/searching results.
+- **Containerization**: Fully containerized with Docker and orchestrated via Docker Compose.
 
 ## Prerequisites
-- Docker and Docker Compose
-- Python 3.8+ (for local backend development)
-- Node.js 16+ (for local frontend development)
+- **Docker** and **Docker Compose** (for containerized setup)
+- **Python 3.12+** (for local backend development)
+- **Node.js 18+** (for local frontend development)
 
 ## Setup and Installation
 1. **Clone the Repository**:
@@ -57,8 +56,9 @@ webcrawler-app/
    ```bash
    docker-compose up --build
    ```
-   - Backend API: `http://localhost:8000`
-   - Frontend UI: `http://localhost:3000`
+   - **Backend API**: Available at `http://localhost:8000`
+   - **Frontend UI**: Available at `http://localhost:3000`
+   - **Database**: PostgreSQL running on `localhost:5432`
 
 3. **Local Development (Optional)**:
    - **Backend**:
@@ -67,6 +67,8 @@ webcrawler-app/
      python -m venv venv
      source venv/bin/activate  # On Windows: venv\Scripts\activate
      pip install -r requirements.txt
+     export DATABASE_URL=postgresql://user:password@localhost:5432/scraper_db
+     export SECRET_KEY=your-secret-key  # Replace with a secure key
      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
      ```
    - **Frontend**:
@@ -77,16 +79,34 @@ webcrawler-app/
      ```
 
 ## Usage
-- **Start a Crawl**: Use the frontend UI or send a POST request to the API (e.g., `/api/crawl`) with a target URL.
-- **View Results**: Access crawled data via the frontend or API endpoints (e.g., `/api/results`).
-- **Database**: Crawled data is stored in a database (configured in `docker-compose.yml`, e.g., PostgreSQL).
+1. **Register/Login**: Access the frontend at `http://localhost:3000` to register a new user or log in with existing credentials.
+2. **Start a Crawl**: After logging in, enter a valid URL (e.g., `https://example.com`) in the frontend form or send a POST request to `/api/scrape/` with a JSON body containing the `url` field.
+3. **View Results**: Crawled data (title, content, timestamp) is displayed in the frontend or accessible via the `/api/scrapes/` endpoint.
+4. **Search Scrapes**: Use the search bar in the frontend to filter previous crawl results by URL, title, or content.
+
+## API Endpoints
+- **POST /register**: Register a new user (`{ "username": "string", "password": "string" }`).
+- **POST /token**: Log in and receive a JWT token (`{ "username": "string", "password": "string" }`).
+- **POST /scrape/**: Start a crawl for a given URL (`{ "url": "string" }`).
+- **GET /scrapes/**: Retrieve all scraped data for the authenticated user, with optional `search` query parameter.
+- **GET /users/**: List all users (admin-only).
+- **GET /health**: Check API health status.
 
 ## Configuration
 - **Backend**:
-  - Edit `backend/scraper/scraper/settings.py` for Scrapy settings (e.g., concurrency, user-agent).
-  - Configure database in `backend/app/database.py` (e.g., connection string).
+  - Modify `backend/scraper/scraper/settings.py` for Scrapy settings (e.g., `USER_AGENT`, `DOWNLOAD_TIMEOUT`).
+  - Update `backend/app/database.py` or `docker-compose.yml` for database connection settings.
+  - Set the `SECRET_KEY` environment variable for JWT authentication.
 - **Docker**:
-  - Update `docker-compose.yml` for ports, volumes, or database settings.
+  - Adjust `docker-compose.yml` for custom ports, volumes, or environment variables.
+  - Ensure the `DATABASE_URL` in `docker-compose.yml` matches your database configuration.
+- **Frontend**:
+  - Configure API base URL in `frontend/src/App.js` if the backend is hosted elsewhere.
+
+## Security Notes
+- Store sensitive configurations (e.g., `DATABASE_URL`, `SECRET_KEY`) in a `.env` file and load them using a library like `python-dotenv`.
+- Ensure database credentials are secure in production environments.
+- Use HTTPS for production deployments to secure API and frontend communication.
 
 ## Contributing
 1. Fork the repository.
@@ -96,9 +116,10 @@ webcrawler-app/
 5. Open a pull request.
 
 ## Notes
-- The `middlewares.py` file is currently empty and can be extended for custom Scrapy middleware (e.g., proxies, retries).
-- Ensure database credentials are secure in production.
-- Add environment variables for sensitive configurations (e.g., `.env` file).
+- The `middlewares.py` and `pipelines.py` files in `backend/scraper/scraper/` are currently empty but can be extended for custom Scrapy middleware or item processing logic.
+- The backend enforces a 30-second timeout for scraping operations to prevent long-running tasks.
+- The frontend includes basic URL validation to ensure only valid HTTP/HTTPS URLs are submitted.
+- CORS is configured to allow requests from `http://localhost:3000`. Update `backend/app/main.py` for different origins in production.
 
 ## License
 This project is licensed under the MIT License.
