@@ -1,6 +1,19 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+class UserBase(BaseModel):
+    username: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: int
+    role: str
+
+    class Config:
+        from_attributes = True
+
 class ScrapedDataBase(BaseModel):
     url: str
     title: str
@@ -9,6 +22,7 @@ class ScrapedDataBase(BaseModel):
 class ScrapedData(ScrapedDataBase):
     id: int
     timestamp: datetime
+    user_id: int
 
     class Config:
         from_attributes = True

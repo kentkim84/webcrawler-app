@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from .database import Base
 from datetime import datetime
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    role = Column(String, default="user")  # user or admin
 
 class ScrapedData(Base):
     __tablename__ = "scraped_data"
@@ -10,3 +18,4 @@ class ScrapedData(Base):
     title = Column(String)
     content = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(Integer, ForeignKey("users.id"))

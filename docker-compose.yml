@@ -20,6 +20,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://user:password@db:5432/scraper_db
+      SECRET_KEY: 9ed75b93c535a00de401ee2cf9902ebbd48a7d055999b45da805eb12eab8ed97
     depends_on:
       - db
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
