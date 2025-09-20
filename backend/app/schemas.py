@@ -6,9 +6,6 @@ class ScrapedDataBase(BaseModel):
     title: str
     content: str
 
-class ScrapedDataCreate(ScrapedDataBase):
-    pass
-
 class ScrapedData(ScrapedDataBase):
     id: int
     timestamp: datetime

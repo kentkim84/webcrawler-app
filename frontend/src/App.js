@@ -9,7 +9,6 @@ function App() {
   const isValidUrl = (string) => {
     try {
       const parsedUrl = new URL(string);
-      // Ensure the URL has a valid scheme and hostname
       return ['http:', 'https:'].includes(parsedUrl.protocol) && !!parsedUrl.hostname;
     } catch (_) {
       return false;
@@ -30,20 +29,8 @@ function App() {
       const response = await axios.post('http://localhost:8000/scrape/', { url });
       setResult(response.data);
     } catch (err) {
-      console.error('Axios error:', err);
-      // Handle Pydantic validation errors
-      if (err.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        if (Array.isArray(detail)) {
-          // Extract message from Pydantic error array
-          const errorMessage = detail.map((e) => e.msg).join('; ') || 'Error scraping URL';
-          setError(errorMessage);
-        } else {
-          setError(detail || 'Error scraping URL');
-        }
-      } else {
-        setError('Error scraping URL. Please try again.');
-      }
+      const detail = err.response?.data?.detail;
+      setError(detail || 'Error scraping URL. Please try again.');
     }
   };
 
