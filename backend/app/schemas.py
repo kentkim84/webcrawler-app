@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class UserBase(BaseModel):
     username: str
@@ -23,6 +24,16 @@ class ScrapedData(ScrapedDataBase):
     id: int
     timestamp: datetime
     user_id: int
+
+    class Config:
+        from_attributes = True
+
+class Log(BaseModel):
+    id: int
+    level: str
+    message: str
+    timestamp: datetime
+    user_id: Optional[int]
 
     class Config:
         from_attributes = True
